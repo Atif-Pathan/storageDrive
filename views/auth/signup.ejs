@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head', { title: 'Sign up for your own Storage Drive!' }) %>
+</head>
+<body>
+    <div class="container">
+        <h1>Join the Clubhouse</h1>
+        
+        <form action="/auth/signup" method="POST">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" 
+                       value="<%= typeof user !== 'undefined' ? user.username || '' : '' %>"
+                       required
+                       minlength="1"
+                       maxlength="50">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password (minimum 8 characters):</label>
+                <input type="password" id="password" name="password"
+                       value="<%= typeof user !== 'undefined' ? user.password || '' : '' %>" 
+                       required 
+                       minlength="8">
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password:</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required>
+            </div>
+            
+            <button type="submit">Sign Up</button>
+        </form>
+        
+        <p><a href="/auth/login">Already have an account? Log in</a></p>
+    </div>
+</body>
+</html>

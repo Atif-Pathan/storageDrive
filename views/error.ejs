@@ -1,0 +1,21 @@
+<!-- views/error.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include('./partials/head', { title: 'Error' }) %>
+  </head>
+  <body>
+    <div class="container error-container">
+      <h1>Oops! Something went wrong.</h1>
+      <p><%= message %></p>
+
+      <!-- Only show detailed error stack in development mode -->
+      <% if (process.env.NODE_ENV !== 'production' && error) { %>
+      <pre><code><%= error.stack %></code></pre>
+      <% } %>
+
+      <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+    </div>
+  </body>
+</html>
+
