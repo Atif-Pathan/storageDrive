@@ -9,7 +9,7 @@ require('./config/passport');
 const passport = require("passport");
 
 // Import middlewares -- if needed here
-// const { requestLogger } = require('./middleware/logging');
+const { attachUser } = require('./middleware/authRelated');
 
 // Import all the auth/session related stuff
 const session = require("express-session");
@@ -17,7 +17,19 @@ const { PrismaSessionStore } = require('@quixo3/prisma-session-store');
 const prismaClient = require("./config/prismaClient")
 
 // Import all the routers for the routes
+const { Router } = require('express');
 const authRouter = require('./routes/authRoutes');
+const driveRouter = require('./routes/driveRoutes');
+const indexRouter = Router(); // use router here, no need to have a router or controller for the base url /
+
+// GET homepage/landing page
+indexRouter.get('/', async (req, res, next) => {
+  try {
+    res.render('index');
+  } catch (err) {
+    next(err);
+  }
+});
 
 // setup the app + port
 const app = express();
@@ -39,7 +51,7 @@ app.use(
      maxAge: 24 * 60 * 60 * 1000, // 24 hours
      httpOnly: true,
      secure: isProduction,
-     sameSite: isProduction ? 'lax' : 'none',
+     sameSite: 'lax',
     },
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -56,12 +68,16 @@ app.use(
 );
 
 // Passport config
+app.use(passport.initialize());
 app.use(passport.session());
 
 // attach any custom middlewares (imported above)
+app.use(attachUser)
 
 // Routes
+app.use('/', indexRouter)
 app.use('/auth', authRouter);
+app.use('/mydrive', driveRouter)
 
 // Global error handler
 app.use((err, req, res, next) => {

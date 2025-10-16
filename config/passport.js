@@ -34,8 +34,11 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await prismaClient.user.findUnique({
-      where: { id },
+      where: { id: parseInt(id) }, 
     });
+    if (!user) {
+      return done(null, false); // User deleted since login
+    }
     done(null, user);
   } catch (err) {
     done(err);
