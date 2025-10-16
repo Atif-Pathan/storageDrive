@@ -1,29 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <%- include('../partials/head', { title: 'Log in' }) %>
 </head>
 <body>
     <div class="container">
-        <h1>Log In</h1>
-        
-        <form action="/auth/login" method="POST">
-            <div class="form-group">
-                <label for="username">Username:</label>
-                <input type="username" id="username" name="username" required>
-            </div>
+        <div class="auth-box">
+            <h1>Welcome Back</h1>
             
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
+            <%- include('../partials/_messages') %>
             
-            <button type="submit">Log In</button>
-        </form>
-        
-        <p><a href="/auth/signup">Don't have an account? Sign up</a></p>
+            <form action="/auth/login" method="POST" class="auth-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        required
+                        placeholder="Your username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required
+                        placeholder="Your password">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Log In</button>
+            </form>
+            
+            <p class="auth-link">Don't have an account? <a href="/auth/signup">Sign up</a></p>
+        </div>
     </div>
 </body>
 </html>

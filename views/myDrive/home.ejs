@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('../partials/head', { title: 'My Storage Drive' }) %>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h2>📁 Storage Drive</h2>
+            </div>
+            <div class="nav-user">
+                <span>Welcome, <strong><%= user.username %></strong></span>
+                <form action="/auth/logout" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-secondary">Log Out</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="drive-content">
+            <h1>My Files</h1>
+            
+            <div class="empty-state">
+                <p>📂 Your drive is empty</p>
+                <p class="text-muted">Start by uploading your first file!</p>
+            </div>
+            
+            <!-- File upload and folders will go here -->
+        </div>
+    </div>
+</body>
+</html>
