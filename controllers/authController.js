@@ -4,20 +4,38 @@ const prismaClient = require('../config/prismaClient');
 const { body, validationResult } = require('express-validator');
 
 const validateUser = [
-  body('username', 'Username must be 1–50 characters.').trim().notEmpty().isLength({ min: 1, max: 50 }),
-  // Add password validation
-  body('password').notEmpty().isLength({ min: 8 }),
-  body('confirmPassword', 'Passwords must match.').custom((value, { req }) => {
-    if (value !== req.body.password) {
-      throw new Error('Passwords do not match');
-    }
-    return true;
-  }),
+  body('username')
+    .trim()
+    .notEmpty()
+    .withMessage('Username is required')
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Username must be 1–50 characters')
+    .matches(/^[a-zA-Z0-9_-]+$/)
+    .withMessage('Username can only contain letters, numbers, hyphens, and underscores'),
+  
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters'),
+  
+  body('confirmPassword')
+    .notEmpty()
+    .withMessage('Please confirm your password')
+    .custom((value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error('Passwords do not match');
+      }
+      return true;
+    }),
 ];
 
 // GET signup form
 exports.getSignUp = (req, res) => {
-  res.render('auth/signup');
+  res.render('auth/signup', {
+    errors: null,
+    username: ''
+  });
 };
 
 
@@ -28,43 +46,52 @@ exports.postSignUp = [
         try {
             const errors = validationResult(req);
             const { username, password } = req.body;
-            if (!errors.isEmpty) {
-                return res.status(400).render('auth/signup', {
-                    user: { username, password }, // Pass back submitted data
-                    errors: errors.array(),
+
+            if (!errors.isEmpty()) {
+                return res.render('auth/signup', {
+                errors: errors.array(),
+                username
                 });
             }
 
             // check if username already exists
-            const existingUser = await prismaClient.user.findFirst({
+            const existingUser = await prismaClient.user.findUnique({
                 where: { username }
             })
+
             if (existingUser) {
-                return res.status(400).render('auth/signup', {
-                    user: { username },
-                    error: 'Username is already registered/taken, try a different user name.',
+                return res.render('auth/signup', {
+                errors: [{ msg: 'Username is already taken. Please choose another.' }],
+                username
                 });
             }
 
             const hashedPassword = await bcrypt.hash(password, 12);
 
-            const newUser = await prismaClient.user.create({
+            // create new user with username and password
+            await prismaClient.user.create({
                 data: {
-                    username: username,
+                    username,
                     password: hashedPassword
                 }
             });
 
-            console.log(`User created: ${newUser.username}`);
-
-            // Redirect to login page with success message
-            res.render('auth/login', {
-                title: 'Log In to your Storage Drive!',
-                success: 'Account created successfully! Please log in.',
-            });
+            // Redirect with success message
+            res.redirect('/auth/login?success=Account created! Please log in.');
         } catch (error) {
             next(error);
         }
     }
 ]
+
+// GET login form
+exports.getLogin = (req, res) => {
+  const error = req.query.error;
+  const success = req.query.success;
+  
+  res.render('auth/login', {
+    error: error || null,
+    success: success || null
+  });
+};
    
