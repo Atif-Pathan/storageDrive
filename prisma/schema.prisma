@@ -35,6 +35,8 @@ model Folder {
   parent      Folder?   @relation("FolderToFolder", fields: [parentId], references: [id])
   children    Folder[]  @relation("FolderToFolder")
   files       File[]
+
+  @@unique([name, userId, parentId])
 }
 
 model File {
