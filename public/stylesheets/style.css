@@ -238,3 +238,60 @@ body {
   margin: 20px 0;
   font-size: 0.9rem;
 }
+
+/* File Upload Section */
+.upload-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.upload-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.upload-form input[type="file"] {
+  flex: 1;
+  padding: 10px;
+  border: 2px dashed #667eea;
+  border-radius: 6px;
+  background: white;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+}
+
+/* Files Table */
+.files-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.files-table th,
+.files-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.files-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #555;
+}
+
+.files-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.files-table td:first-child {
+  font-size: 1.5rem;
+  width: 50px;
+  text-align: center;
+}

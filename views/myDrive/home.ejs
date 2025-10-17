@@ -22,12 +22,87 @@
         <div class="drive-content">
             <h1>My Files</h1>
             
-            <div class="empty-state">
-                <p>📂 Your drive is empty</p>
-                <p class="text-muted">Start by uploading your first file!</p>
-            </div>
+            <%- include('../partials/_messages') %>
             
-            <!-- File upload and folders will go here -->
+            <!-- Upload Form -->
+            <div class="upload-section">
+                <h3>Upload New File</h3>
+                <form action="/mydrive/upload" method="POST" enctype="multipart/form-data" class="upload-form">
+                    <input type="file" name="file" required />
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </form>
+            </div>
+
+            <!-- Files List -->
+            <% if (files && files.length > 0) { %>
+                <div class="files-list">
+                    <h3>Your Files (<%= files.length %>)</h3>
+                    <table class="files-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Name</th>
+                                <th>Size</th>
+                                <th>Uploaded</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% files.forEach(file => { %>
+                                <tr>
+                                    <!-- Icon based on mimetype -->
+                                    <td>
+                                        <% if (file.mimeType.startsWith('image/')) { %>
+                                            🖼️
+                                        <% } else if (file.mimeType === 'application/pdf') { %>
+                                            📄
+                                        <% } else if (file.mimeType.includes('text')) { %>
+                                            📝
+                                        <% } else { %>
+                                            📎
+                                        <% } %>
+                                    </td>
+                                    
+                                    <!-- File name -->
+                                    <td><%= file.name %></td>
+                                    
+                                    <!-- File size (formatted) -->
+                                    <td>
+                                        <% if (file.size < 1024) { %>
+                                            <%= file.size %> B
+                                        <% } else if (file.size < 1024 * 1024) { %>
+                                            <%= (file.size / 1024).toFixed(2) %> KB
+                                        <% } else { %>
+                                            <%= (file.size / (1024 * 1024)).toFixed(2) %> MB
+                                        <% } %>
+                                    </td>
+                                    
+                                    <!-- Upload date (formatted) -->
+                                    <td>
+                                        <%= new Date(file.createdAt).toLocaleDateString('en-US', { 
+                                            year: 'numeric', 
+                                            month: 'short', 
+                                            day: 'numeric' 
+                                        }) %>
+                                    </td>
+                                    
+                                    <!-- Download button -->
+                                    <td>
+                                        <a href="/mydrive/files/<%= file.id %>/download" class="btn btn-secondary btn-sm">
+                                            Download
+                                        </a>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            <% } else { %>
+                <div class="empty-state">
+                    <p>📂 Your drive is empty</p>
+                    <p class="text-muted">Start by uploading your first file!</p>
+                </div>
+            <% } %>
         </div>
     </div>
 </body>
