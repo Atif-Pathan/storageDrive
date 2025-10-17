@@ -24,19 +24,60 @@
             
             <%- include('../partials/_messages') %>
             
-            <!-- Upload Form -->
-            <div class="upload-section">
-                <h3>Upload New File</h3>
-                <form action="/mydrive/upload" method="POST" enctype="multipart/form-data" class="upload-form">
-                    <input type="file" name="file" required />
-                    <button type="submit" class="btn btn-primary">Upload</button>
-                </form>
+            <!-- Create Folder Section -->
+            <div class="actions-section">
+                <div class="create-folder">
+                    <h3>Create New Folder</h3>
+                    <form action="/mydrive/folders/create" method="POST" class="folder-form">
+                        <input 
+                            type="text" 
+                            name="folderName" 
+                            placeholder="Folder name..." 
+                            required 
+                            maxlength="50"
+                        />
+                        <button type="submit" class="btn btn-primary">Create Folder</button>
+                    </form>
+                </div>
+
+                <!-- Upload File Section -->
+                <div class="upload-file">
+                    <h3>Upload New File</h3>
+                    <form action="/mydrive/upload" method="POST" enctype="multipart/form-data" class="upload-form">
+                        <input type="file" name="file" required />
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </form>
+                </div>
             </div>
+
+            <!-- Folders List -->
+            <% if (folders && folders.length > 0) { %>
+                <div class="folders-section">
+                    <h3>📁 Folders (<%= folders.length %>)</h3>
+                    <div class="folders-grid">
+                        <% folders.forEach(folder => { %>
+                            <div class="folder-card">
+                                <div class="folder-icon">📁</div>
+                                <div class="folder-name"><%= folder.name %></div>
+                                <div class="folder-meta">
+                                    <span><%= folder._count ? folder._count.files : 0 %> files</span>
+                                </div>
+                                <div class="folder-actions">
+                                    <a href="/mydrive/folders/<%= folder.id %>" class="btn btn-sm btn-secondary">Open</a>
+                                    <form action="/mydrive/folders/<%= folder.id %>/delete" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this folder?')">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            <% } %>
 
             <!-- Files List -->
             <% if (files && files.length > 0) { %>
                 <div class="files-list">
-                    <h3>Your Files (<%= files.length %>)</h3>
+                    <h3>📄 Files (<%= files.length %>)</h3>
                     <table class="files-table">
                         <thead>
                             <tr>
@@ -50,7 +91,6 @@
                         <tbody>
                             <% files.forEach(file => { %>
                                 <tr>
-                                    <!-- Icon based on mimetype -->
                                     <td>
                                         <% if (file.mimeType.startsWith('image/')) { %>
                                             🖼️
@@ -62,11 +102,7 @@
                                             📎
                                         <% } %>
                                     </td>
-                                    
-                                    <!-- File name -->
                                     <td><%= file.name %></td>
-                                    
-                                    <!-- File size (formatted) -->
                                     <td>
                                         <% if (file.size < 1024) { %>
                                             <%= file.size %> B
@@ -76,8 +112,6 @@
                                             <%= (file.size / (1024 * 1024)).toFixed(2) %> MB
                                         <% } %>
                                     </td>
-                                    
-                                    <!-- Upload date (formatted) -->
                                     <td>
                                         <%= new Date(file.createdAt).toLocaleDateString('en-US', { 
                                             year: 'numeric', 
@@ -85,8 +119,6 @@
                                             day: 'numeric' 
                                         }) %>
                                     </td>
-                                    
-                                    <!-- Download button -->
                                     <td>
                                         <a href="/mydrive/files/<%= file.id %>/download" class="btn btn-secondary btn-sm">
                                             Download
@@ -97,10 +129,13 @@
                         </tbody>
                     </table>
                 </div>
-            <% } else { %>
+            <% } %>
+
+            <!-- Empty State -->
+            <% if ((!folders || folders.length === 0) && (!files || files.length === 0)) { %>
                 <div class="empty-state">
                     <p>📂 Your drive is empty</p>
-                    <p class="text-muted">Start by uploading your first file!</p>
+                    <p class="text-muted">Start by creating a folder or uploading a file!</p>
                 </div>
             <% } %>
         </div>
