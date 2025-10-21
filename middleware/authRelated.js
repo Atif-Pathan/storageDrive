@@ -1,4 +1,6 @@
 // middleware/authRelated.js
+const prismaClient = require("../config/prismaClient");
+
 // Make user available to templates
 const attachUser = (req, res, next) => {
   res.locals.currentUser = req.user;

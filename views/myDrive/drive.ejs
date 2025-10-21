@@ -4,32 +4,37 @@
     <%- include('../partials/head', { title: currentFolder ? currentFolder.name : 'My Drive' }) %>
 </head>
 <body>
+    <!-- Skip to main content link (Accessibility) -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
     <!-- Navbar -->
-    <nav class="navbar">
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
         <div class="container">
             <div class="nav-brand">
-                <h2>📁 Storage Drive</h2>
+                <h2>Storage Drive</h2>
             </div>
             <div class="nav-user">
                 <span class="user-greeting">Welcome, <strong><%= user.username %></strong></span>
                 <form action="/auth/logout" method="POST" style="display: inline;">
-                    <button type="submit" class="btn btn-secondary btn-sm">Log Out</button>
+                    <button type="submit" class="btn btn-secondary btn-sm" aria-label="Log out">
+                        Log Out
+                    </button>
                 </form>
             </div>
         </div>
     </nav>
 
     <div class="container">
-        <div class="drive-content">
+        <main class="drive-content" id="main-content">
             <!-- Breadcrumb -->
-            <nav class="breadcrumb">
+            <nav class="breadcrumb" aria-label="Breadcrumb">
                 <% breadcrumbs.forEach((crumb, index) => { %>
                     <% if (index > 0) { %>
-                        <span class="separator">/</span>
+                        <span class="separator" aria-hidden="true">/</span>
                     <% } %>
                     
                     <% if (index === breadcrumbs.length - 1) { %>
-                        <span class="current"><%= crumb.name %></span>
+                        <span class="current" aria-current="page"><%= crumb.name %></span>
                     <% } else { %>
                         <a href="<%= crumb.path %>" class="breadcrumb-link"><%= crumb.name %></a>
                     <% } %>
@@ -41,29 +46,67 @@
                 <h1><%= currentFolder ? currentFolder.name : 'My Drive' %></h1>
             </div>
             
-            <!-- Messages -->
-            <%- include('../partials/_messages') %>
+            <!-- Messages (Dismissible) -->
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="alert alert-error" role="alert">
+                    <div class="alert-content">
+                        <p><%= error %></p>
+                    </div>
+                    <button type="button" class="alert-close" aria-label="Close alert" onclick="this.parentElement.remove()">
+                        ×
+                    </button>
+                </div>
+            <% } %>
+
+            <% if (typeof errors !== 'undefined' && errors && errors.length > 0) { %>
+                <div class="alert alert-error" role="alert">
+                    <div class="alert-content">
+                        <ul>
+                            <% errors.forEach(err => { %>
+                                <li><%= err.msg %></li>
+                            <% }); %>
+                        </ul>
+                    </div>
+                    <button type="button" class="alert-close" aria-label="Close alert" onclick="this.parentElement.remove()">
+                        ×
+                    </button>
+                </div>
+            <% } %>
+
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="alert alert-success" role="alert">
+                    <div class="alert-content">
+                        <p><%= success %></p>
+                    </div>
+                    <button type="button" class="alert-close" aria-label="Close alert" onclick="this.parentElement.remove()">
+                        ×
+                    </button>
+                </div>
+            <% } %>
             
             <!-- Actions -->
             <div class="minimal-actions">
                 <!-- Create Folder -->
-                <form action="/mydrive/folders/create" method="POST" class="inline-form">
+                <form action="/mydrive/folders/create" method="POST" class="inline-form" aria-label="Create new folder">
                     <% if (currentFolder) { %>
                         <input type="hidden" name="parentId" value="<%= currentFolder.id %>" />
                     <% } %>
+                    <label for="folderNameInput" class="sr-only">Folder name</label>
                     <input 
                         type="text" 
+                        id="folderNameInput"
                         name="folderName" 
-                        placeholder="📁 New folder..." 
+                        placeholder="New folder..." 
                         required 
                         maxlength="50"
                         class="inline-input"
+                        aria-label="Folder name"
                     />
                     <button type="submit" class="btn btn-sm btn-primary">Create</button>
                 </form>
 
                 <!-- Upload File -->
-                <form action="/mydrive/upload" method="POST" enctype="multipart/form-data" class="inline-form">
+                <form action="/mydrive/upload" method="POST" enctype="multipart/form-data" class="inline-form" aria-label="Upload file">
                     <% if (currentFolder) { %>
                         <input type="hidden" name="folderId" value="<%= currentFolder.id %>" />
                     <% } %>
@@ -73,59 +116,151 @@
                         required 
                         class="file-input"
                         id="fileInput"
+                        aria-label="Choose file to upload"
                     />
-                    <label for="fileInput" class="inline-file-label">📤 Choose file</label>
+                    <label for="fileInput" class="inline-file-label">Choose file</label>
                     <button type="submit" class="btn btn-sm btn-primary">Upload</button>
                 </form>
             </div>
 
             <!-- Folders Grid -->
             <% if (folders && folders.length > 0) { %>
-                <div class="content-section">
-                    <h2 class="section-title">📁 Folders (<%= folders.length %>)</h2>
-                    <div class="folders-grid">
+                <section class="content-section" aria-labelledby="folders-heading">
+                    <h2 class="section-title" id="folders-heading">Folders (<%= folders.length %>)</h2>
+                    <div class="folders-grid" role="list">
                         <% folders.forEach(folder => { %>
-                            <div class="folder-card">
-                                <a href="/mydrive/folders/<%= folder.id %>" class="folder-link">
-                                    <div class="folder-icon-large">📁</div>
+                            <div class="folder-card" role="listitem">
+                                <a 
+                                    href="/mydrive/folders/<%= folder.id %>" 
+                                    class="folder-link"
+                                    aria-label="Open folder <%= folder.name %>, contains <%= folder._count.files %> files"
+                                >
+                                    <div class="folder-icon-large" aria-hidden="true">📁</div>
                                     <div class="folder-name"><%= folder.name %></div>
                                     <div class="folder-meta"><%= folder._count.files %> files</div>
                                 </a>
+                                
                                 <div class="folder-actions">
-                                    <form action="/mydrive/folders/<%= folder.id %>/delete" method="POST">
+                                    <form 
+                                        action="/mydrive/folders/<%= folder.id %>/delete" 
+                                        method="POST" 
+                                        class="folder-delete-form"
+                                        onsubmit="return confirm('Delete <%= folder.name %>? This will delete all contents.')"
+                                    >
                                         <button 
                                             type="submit" 
-                                            class="btn btn-danger btn-sm" 
-                                            onclick="return confirm('Delete <%= folder.name %>? This will delete all contents.')">
-                                            🗑️ Delete
+                                            class="folder-delete-btn"
+                                            aria-label="Delete folder <%= folder.name %>"
+                                        >
+                                            ❌
                                         </button>
                                     </form>
+                                </div>
+
+                                <!-- Share Section -->
+                                <div class="share-section">
+                                    <% if (folder.shareLink) { %>
+                                        <!-- Existing share link -->
+                                        <div class="existing-share">
+                                            <div class="existing-share-header">🔗 Active Share Link</div>
+                                            <div class="share-link-display">
+                                                <input 
+                                                    type="text" 
+                                                    class="share-link-input" 
+                                                    value="<%= `${req.protocol}://${req.get('host')}/share/${folder.shareLink.id}` %>" 
+                                                    readonly
+                                                    id="share-link-<%= folder.id %>"
+                                                />
+                                                <button 
+                                                    type="button" 
+                                                    class="share-copy-btn"
+                                                    onclick="copyShareLink('<%= folder.id %>')"
+                                                    aria-label="Copy share link"
+                                                >
+                                                    Copy
+                                                </button>
+                                            </div>
+                                            <div class="share-expires">
+                                                Expires: <%= new Date(folder.shareLink.expiresAt).toLocaleDateString('en-US', { 
+                                                    year: 'numeric', 
+                                                    month: 'short', 
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                }) %>
+                                            </div>
+                                            <form 
+                                                action="/mydrive/folders/<%= folder.id %>/share/revoke" 
+                                                method="POST" 
+                                                class="share-revoke-form"
+                                                onsubmit="return confirm('Revoke share link?')"
+                                            >
+                                                <button type="submit" class="share-revoke-btn">Revoke Link</button>
+                                            </form>
+                                        </div>
+                                    <% } else { %>
+                                        <!-- Create new share link -->
+                                        <button 
+                                            type="button" 
+                                            class="share-toggle-btn"
+                                            onclick="toggleShareForm('<%= folder.id %>')"
+                                            aria-label="Share folder <%= folder.name %>"
+                                        >
+                                            🔗 Share
+                                        </button>
+                                        
+                                        <form 
+                                            action="/mydrive/folders/<%= folder.id %>/share" 
+                                            method="POST" 
+                                            class="share-form hidden"
+                                            id="share-form-<%= folder.id %>"
+                                        >
+                                            <div class="share-form-group">
+                                                <label for="duration-<%= folder.id %>">Link expires in:</label>
+                                                <select name="duration" id="duration-<%= folder.id %>" required>
+                                                    <option value="1">1 day</option>
+                                                    <option value="7" selected>7 days</option>
+                                                    <option value="30">30 days</option>
+                                                </select>
+                                            </div>
+                                            <div class="share-form-actions">
+                                                <button type="submit" class="btn btn-primary btn-sm">Generate</button>
+                                                <button 
+                                                    type="button" 
+                                                    class="btn btn-secondary btn-sm"
+                                                    onclick="toggleShareForm('<%= folder.id %>')"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </form>
+                                    <% } %>
                                 </div>
                             </div>
                         <% }); %>
                     </div>
-                </div>
+                </section>
             <% } %>
 
             <!-- Files Table -->
             <% if (files && files.length > 0) { %>
-                <div class="content-section">
-                    <h2 class="section-title">📄 Files (<%= files.length %>)</h2>
+                <section class="content-section" aria-labelledby="files-heading">
+                    <h2 class="section-title" id="files-heading">Files (<%= files.length %>)</h2>
                     <div class="table-responsive">
                         <table class="files-table">
                             <thead>
                                 <tr>
-                                    <th class="col-icon"></th>
-                                    <th class="col-name">Name</th>
-                                    <th class="col-size">Size</th>
-                                    <th class="col-date">Uploaded</th>
-                                    <th class="col-actions">Actions</th>
+                                    <th scope="col" class="col-icon"><span class="sr-only">File type</span></th>
+                                    <th scope="col" class="col-name">Name</th>
+                                    <th scope="col" class="col-size">Size</th>
+                                    <th scope="col" class="col-date">Uploaded</th>
+                                    <th scope="col" class="col-actions">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <% files.forEach(file => { %>
                                     <tr class="file-row">
-                                        <td class="file-icon">
+                                        <td class="file-icon" aria-hidden="true">
                                             <% if (file.mimeType.startsWith('image/')) { %>
                                                 🖼️
                                             <% } else if (file.mimeType === 'application/pdf') { %>
@@ -156,15 +291,24 @@
                                             }) %>
                                         </td>
                                         <td class="file-actions">
-                                            <a href="/mydrive/files/<%= file.id %>/download" class="btn btn-secondary btn-sm">
-                                                ⬇️ Download
+                                            <a 
+                                                href="/mydrive/files/<%= file.id %>/download" 
+                                                class="btn btn-secondary btn-sm"
+                                                aria-label="Download <%= file.name %>"
+                                            >
+                                                Download
                                             </a>
-                                            <form action="/mydrive/files/<%= file.id %>/delete" method="POST">
+                                            <form 
+                                                action="/mydrive/files/<%= file.id %>/delete" 
+                                                method="POST"
+                                                onsubmit="return confirm('Delete <%= file.name %>?')"
+                                            >
                                                 <button 
                                                     type="submit" 
-                                                    class="btn btn-danger btn-sm" 
-                                                    onclick="return confirm('Delete <%= file.name %>?')">
-                                                    🗑️ Delete
+                                                    class="btn btn-danger btn-sm"
+                                                    aria-label="Delete <%= file.name %>"
+                                                >
+                                                    Delete
                                                 </button>
                                             </form>
                                         </td>
@@ -173,21 +317,22 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </section>
             <% } %>
 
             <!-- Empty State -->
             <% if ((!folders || folders.length === 0) && (!files || files.length === 0)) { %>
                 <div class="empty-state">
-                    <div class="empty-icon">📂</div>
+                    <div class="empty-icon" aria-hidden="true">📂</div>
                     <h3>This location is empty</h3>
                     <p class="text-muted">Create a folder or upload a file to get started</p>
                 </div>
             <% } %>
-        </div>
+        </main>
     </div>
 
     <script>
+        // File input label update
         document.addEventListener('DOMContentLoaded', function() {
             const fileInput = document.getElementById('fileInput');
             const fileLabel = document.querySelector('.inline-file-label');
@@ -195,11 +340,50 @@
             if (fileInput && fileLabel) {
                 fileInput.addEventListener('change', function(e) {
                     if (e.target.files.length > 0) {
-                        fileLabel.textContent = e.target.files[0].name;
+                        const fileName = e.target.files[0].name;
+                        fileLabel.textContent = fileName.length > 20 
+                            ? fileName.substring(0, 17) + '...' 
+                            : fileName;
+                    } else {
+                        fileLabel.textContent = 'Choose file';
                     }
                 });
             }
         });
+
+        // Toggle share form visibility
+        function toggleShareForm(folderId) {
+            const form = document.getElementById(`share-form-${folderId}`);
+            if (form) {
+                form.classList.toggle('hidden');
+            }
+        }
+
+        // Copy share link to clipboard
+        function copyShareLink(folderId) {
+            const input = document.getElementById(`share-link-${folderId}`);
+            if (input) {
+                input.select();
+                input.setSelectionRange(0, 99999); // For mobile
+                
+                navigator.clipboard.writeText(input.value).then(() => {
+                    // Visual feedback
+                    const btn = event.target;
+                    const originalText = btn.textContent;
+                    btn.textContent = '✓ Copied!';
+                    btn.style.background = 'var(--success-text)';
+                    
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                        btn.style.background = '';
+                    }, 2000);
+                }).catch(err => {
+                    // Fallback for older browsers
+                    document.execCommand('copy');
+                    alert('Link copied to clipboard!');
+                });
+            }
+        }
     </script>
 </body>
 </html>

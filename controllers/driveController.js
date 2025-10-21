@@ -20,46 +20,45 @@ const validateFolder = [
 // GET my drive - for authenticated users only
 exports.getDrive = async (req, res, next) => {
   try {
-    // folder id is null for root, else its the folder id in the route
     const folderId = req.params.id ? parseInt(req.params.id) : null;
     let currentFolder = null;
     let breadcrumbs = [{ id: null, name: 'My Drive', path: '/mydrive' }];
     
-    // If viewing a specific folder
     if (folderId) {
-      // Fetch folder with parent chain
-      currentFolder = await prismaClient.folder.findUnique({
-        where: { id: folderId }
-      });
-      
-      // verify ownership
-      await verifyFolderOwnership(folderId, req.user.id);
+      currentFolder = await verifyFolderOwnership(folderId, req.user.id);
 
       // Build breadcrumbs
-      breadcrumbs = [{id: folderId, name: currentFolder.name, path: `/mydrive/folders/${folderId}`}] // current folder added
+      breadcrumbs = [{
+        id: folderId, 
+        name: currentFolder.name, 
+        path: `/mydrive/folders/${folderId}`
+      }];
+      
       let currentParentId = currentFolder.parentId;
       while (currentParentId !== null) {
         const parentFolder = await prismaClient.folder.findUnique({
           where: { id: currentParentId }
         });
-        breadcrumbs.push({id: currentParentId, name: parentFolder.name, path: `/mydrive/folders/${currentParentId}`})
+        breadcrumbs.push({
+          id: currentParentId, 
+          name: parentFolder.name, 
+          path: `/mydrive/folders/${currentParentId}`
+        });
         currentParentId = parentFolder.parentId;
       }
-      breadcrumbs.push({ id: null, name: 'My Drive', path: '/mydrive' })
+      breadcrumbs.push({ id: null, name: 'My Drive', path: '/mydrive' });
       breadcrumbs.reverse();
     }
     
-    // Fetch folders (children of current folder)
     const folders = await prismaClient.folder.findMany({
       where: {
         userId: req.user.id,
         parentId: folderId
       },
-      include: { _count: { select: { files: true } } },
+      include: { _count: { select: { files: true } }, shareLink: true },
       orderBy: { createdAt: 'desc' }
     });
     
-    // Fetch files (in current folder)
     const files = await prismaClient.file.findMany({
       where: {
         userId: req.user.id,
@@ -93,15 +92,7 @@ exports.postUpload = async (req, res, next) => {
     const folderId = req.body.folderId ? parseInt(req.body.folderId) : null;
 
     if (folderId) {
-      const folder = await prismaClient.folder.findUnique({
-        where: { id: folderId }
-      });
-      
-      if (!folder || folder.userId !== req.user.id) {
-        // Clean up file before returning
-        await fs.unlink(path).catch(() => {});
-        return res.redirect('/mydrive?error=Folder not found or access denied');
-      }
+      await verifyFolderOwnership(folderId, req.user.id);
     }
 
     // Upload to Cloudinary
@@ -164,20 +155,22 @@ exports.postUpload = async (req, res, next) => {
 
 exports.postCreateFolder = [
   ...validateFolder,
-  async (req, res) => {
+  async (req, res, next) => {
     try {
       const errors = validationResult(req);
       const { folderName } = req.body;
       const parentId = req.body.parentId ? parseInt(req.body.parentId) : null;
 
       if (!errors.isEmpty()) {
-        return res.redirect('/mydrive?error=Failed to create folder'); 
+        // User error - redirect with message
+        const errorMsg = errors.array()[0].msg;
+        const redirectUrl = parentId 
+          ? `/mydrive/folders/${parentId}?error=${encodeURIComponent(errorMsg)}`
+          : `/mydrive?error=${encodeURIComponent(errorMsg)}`;
+        return res.redirect(redirectUrl);
       }
 
       if (parentId) {
-        const parentFolder = await prismaClient.folder.findUnique({
-          where: { id: parentId }
-        });
         // verify ownership
         await verifyFolderOwnership(parentId, req.user.id);
       }
@@ -191,7 +184,11 @@ exports.postCreateFolder = [
       });
 
       if (existingFolder) {
-        return res.redirect('/mydrive?error=Folder already exists');
+        // User error - redirect with message
+        const redirectUrl = parentId 
+          ? `/mydrive/folders/${parentId}?error=Folder already exists`
+          : '/mydrive?error=Folder already exists';
+        return res.redirect(redirectUrl);
       }
 
       await prismaClient.folder.create({
@@ -202,9 +199,13 @@ exports.postCreateFolder = [
         }
       });
 
-      res.redirect(parentId ? `/mydrive/folders/${parentId}?success=Folder created` : '/mydrive?success=Folder created');
+      const redirectUrl = parentId 
+        ? `/mydrive/folders/${parentId}?success=Folder created`
+        : '/mydrive?success=Folder created';
+      
+      res.redirect(redirectUrl);
     } catch (error) {
-        res.redirect('/mydrive?error=Failed to create folder');
+        next(error);
     }
   }
 ]
@@ -212,22 +213,21 @@ exports.postCreateFolder = [
 exports.deleteFolder = async (req, res, next) => {
   try {
     const folderId = req.params.id ? parseInt(req.params.id) : null;
-    const folder = await prismaClient.folder.findUnique({
-        where: { id: folderId }
-      });
-
-    // verify ownership
-    await verifyFolderOwnership(folderId, req.user.id);
-
+    
+    const folder = await verifyFolderOwnership(folderId, req.user.id);
     const parentId = folder.parentId
 
     await prismaClient.folder.delete({
       where: { id: folderId }
     })
 
-    res.redirect(parentId ? `/mydrive/folders/${parentId}?success=Folder deleted` : '/mydrive?success=Folder deleted');
+    const redirectUrl = parentId 
+      ? `/mydrive/folders/${parentId}?success=Folder deleted`
+      : '/mydrive?success=Folder deleted';
+    
+    res.redirect(redirectUrl);
   } catch (error) {
-    res.redirect('/mydrive?error=Failed to delete folder');
+    next(error)
   }
 }
 
@@ -237,6 +237,7 @@ exports.downloadFile = async(req, res, next) => {
     const file = await prismaClient.file.findUnique({
       where: {id: fileId}
     })
+
     if (!file) {
       return res.status(404).render('error', { 
         message: 'File does not exist',
@@ -262,7 +263,7 @@ exports.downloadFile = async(req, res, next) => {
       res.status(500).send('Download failed');
     });
   } catch (error) {
-    res.redirect('/mydrive?error=Failed to download file');
+    next(error)
   }
 }
 
@@ -297,8 +298,12 @@ exports.deleteFile = async(req, res, next) => {
       where: { id: fileId }
     })
 
-    res.redirect(file.folderId ? `/mydrive/folders/${file.folderId}?success=File deleted` : '/mydrive?success=File deleted');
+    const redirectUrl = file.folderId 
+      ? `/mydrive/folders/${file.folderId}?success=File deleted`
+      : '/mydrive?success=File deleted';
+    
+    res.redirect(redirectUrl);
   } catch (error) {
-    res.redirect('/mydrive?error=Failed to delete file');
+    next(error)
   }
 }
