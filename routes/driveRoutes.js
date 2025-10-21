@@ -5,14 +5,17 @@ const { requireAuth } = require('../middleware/authRelated');
 const driveRouter = Router();
 const upload = require('../config/multer')
 
-driveRouter.get('/', requireAuth, driveController.getMyDrive);
-// driveRouter.post('/signup', driveController.postSignUp);
+// Root view
+driveRouter.get('/', requireAuth, driveController.getDrive);                                                    // READ
 
-driveRouter.post('/upload', requireAuth, upload.single('file'), driveController.postUpload);
+// Folder view
+driveRouter.get('/folders/:id', requireAuth, driveController.getDrive);                                         // READ
 
-// folder related
-driveRouter.post('/folders/create', requireAuth, driveController.postCreateFolder);
-driveRouter.get('/folders/:id', requireAuth, driveController.getFolderContents);
-driveRouter.post('/folders/:id/delete', requireAuth, driveController.deleteFolder);
+// Actions
+driveRouter.post('/folders/create', requireAuth, driveController.postCreateFolder);                             // CREATE
+driveRouter.post('/folders/:id/delete', requireAuth, driveController.deleteFolder);       // DELETE   
+driveRouter.post('/upload', requireAuth, upload.single('file'), driveController.postUpload);                    // CREATE - file
+driveRouter.get('/files/:id/download', requireAuth, driveController.downloadFile);                              // download - file
+driveRouter.post('/files/:id/delete', requireAuth, driveController.deleteFile);                             // delete - file
 
 module.exports = driveRouter;

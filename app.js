@@ -45,6 +45,9 @@ app.set('views', path.join(__dirname, 'views')); // Set the view engine to EJS
 app.set('view engine', 'ejs');
 
 // session config using the Prisma Session Store & Prisma Client
+if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
+  throw new Error('SESSION_SECRET must be at least 32 characters long');
+}
 app.use(
   session({
     cookie: {
@@ -81,13 +84,33 @@ app.use('/mydrive', driveRouter)
 
 // Global error handler
 app.use((err, req, res, next) => {
-  // Set locals, only providing error in development
+  // Log error for debugging
+  console.error('Error:', err.message);
+  if (process.env.NODE_ENV === 'development') {
+    console.error(err.stack);
+  }
+
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // Render the error page
+  // Multer file size error
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.redirect('/mydrive?error=File too large. Maximum size is 8MB');
+  }
+
+  // Multer file type error
+  if (err.message && err.message.includes('Invalid file type')) {
+    return res.redirect('/mydrive?error=' + encodeURIComponent(err.message));
+  }
+
+  // Prisma unique constraint error
+  if (err.code === 'P2002') {
+    return res.redirect('/mydrive?error=A folder with that name already exists');
+  }
+
+  // Default 500 error page
   res.status(err.status || 500);
-  res.render('error'); // Renders views/error.ejs
+  res.render('error');
 });
 
 app.listen(PORT, () => {

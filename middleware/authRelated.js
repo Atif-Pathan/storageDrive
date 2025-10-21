@@ -21,4 +21,26 @@ const requireAuth = (req, res, next) => {
   );
 };
 
-module.exports = { attachUser, requireAuth };
+const verifyFolderOwnership = async (folderId, userId) => {
+  if (!folderId) return null;
+  
+  const folder = await prismaClient.folder.findUnique({
+    where: { id: folderId }
+  });
+  
+  if (!folder) {
+    const error = new Error('Folder not found');
+    error.status = 404;
+    throw error;
+  }
+  
+  if (folder.userId !== userId) {
+    const error = new Error('Access denied');
+    error.status = 403;
+    throw error;
+  }
+  
+  return folder;
+};
+
+module.exports = { attachUser, requireAuth, verifyFolderOwnership };

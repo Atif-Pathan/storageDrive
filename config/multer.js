@@ -1,13 +1,6 @@
 // config/multer.js
 const multer  = require('multer')
-
-const getFileExtension = (filename) => {
-  const parts = filename.split('.');
-  if (parts.length > 1) { // Ensure there is an extension
-    return parts.pop();
-  }
-  return ''; // No extension found
-}
+const mime = require('mime-types')
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -15,7 +8,10 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    const ext = getFileExtension(file.originalname);
+    const ext = mime.extension(file.mimetype);
+    if (!ext) {
+      return cb(new Error('Could not determine file extension'));
+    }
     cb(null, uniqueSuffix + '.' + ext)
   }
 })
@@ -28,6 +24,7 @@ const fileFilter = (req, file, cb) => {
     'image/svg+xml',
     'application/pdf',
     'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'text/plain',
   ];
 
@@ -42,7 +39,7 @@ const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 10 * 1024 * 1024 // 10MB
+        fileSize: 8 * 1024 * 1024 // 8MB
     }
 })
 

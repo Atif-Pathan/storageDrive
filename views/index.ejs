@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <%- include('./partials/head', { title: 'Welcome to the Storage Drive!' }) %>
+    <%- include('./partials/head', { title: 'Welcome to Storage Drive' }) %>
 </head>
 <body>
-    <div class="container">
-        <div class="landing">
+    <div class="landing">
+        <div>
             <h1>📁 Storage Drive</h1>
             <p class="subtitle">Your personal cloud storage solution</p>
             
             <% if (typeof success !== 'undefined' && success) { %>
-              <div class="alert alert-success">
-                <p><%= success %></p>
-              </div>
+                <div class="alert alert-success">
+                    <p><%= success %></p>
+                </div>
             <% } %>
             
             <div class="cta-buttons">

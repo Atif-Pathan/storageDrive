@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <%- include('../partials/head', { title: 'Sign up for your own Storage Drive!' }) %>
+    <%- include('../partials/head', { title: 'Sign Up' }) %>
 </head>
 <body>
     <div class="container">
         <div class="auth-box">
-            <h1>Create Your Account</h1>
+            <h1>Create Account</h1>
             
             <%- include('../partials/_messages') %>
             
@@ -45,7 +45,7 @@
                         placeholder="Re-enter your password">
                 </div>
                 
-                <button type="submit" class="btn btn-primary">Sign Up</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Sign Up</button>
             </form>
             
             <p class="auth-link">Already have an account? <a href="/auth/login">Log in</a></p>

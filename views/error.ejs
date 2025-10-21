@@ -1,12 +1,11 @@
-<!-- views/error.ejs -->
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <%- include('./partials/head', { title: 'Error' }) %>
-  </head>
-  <body>
-    <div class="container">
-        <div class="error-page">
+</head>
+<body>
+    <div class="error-page">
+        <div>
             <h1>😕 Oops!</h1>
             <h2><%= message %></h2>
             
@@ -18,9 +17,8 @@
                 <pre class="error-stack"><%= error.stack %></pre>
             <% } %>
             
-            <a href="/" class="btn btn-primary">Go Home</a>
+            <a href="/" class="btn btn-primary" style="margin-top: 24px;">Go Home</a>
         </div>
     </div>
-  </body>
+</body>
 </html>
-
