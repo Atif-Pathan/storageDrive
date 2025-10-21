@@ -19,6 +19,7 @@ const prismaClient = require("./config/prismaClient")
 // Import all the routers for the routes
 const { Router } = require('express');
 const authRouter = require('./routes/authRoutes');
+const publicRouter = require('./routes/publicRoutes')
 const driveRouter = require('./routes/driveRoutes');
 const indexRouter = Router(); // use router here, no need to have a router or controller for the base url /
 
@@ -80,6 +81,7 @@ app.use(attachUser)
 // Routes
 app.use('/', indexRouter)
 app.use('/auth', authRouter);
+app.use('/share', publicRouter);
 app.use('/mydrive', driveRouter)
 
 // Global error handler

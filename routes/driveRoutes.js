@@ -13,9 +13,13 @@ driveRouter.get('/folders/:id', requireAuth, driveController.getDrive);         
 
 // Actions
 driveRouter.post('/folders/create', requireAuth, driveController.postCreateFolder);                             // CREATE
-driveRouter.post('/folders/:id/delete', requireAuth, driveController.deleteFolder);       // DELETE   
+driveRouter.post('/folders/:id/delete', requireAuth, driveController.deleteFolder);                             // DELETE   
 driveRouter.post('/upload', requireAuth, upload.single('file'), driveController.postUpload);                    // CREATE - file
 driveRouter.get('/files/:id/download', requireAuth, driveController.downloadFile);                              // download - file
-driveRouter.post('/files/:id/delete', requireAuth, driveController.deleteFile);                             // delete - file
+driveRouter.post('/files/:id/delete', requireAuth, driveController.deleteFile);                                 // delete - file
+
+// share links
+driveRouter.post('/folders/:id/share', requireAuth, driveController.createShareLink);
+driveRouter.post('/folders/:id/share/revoke', requireAuth, driveController.revokeShareLink);
 
 module.exports = driveRouter;
